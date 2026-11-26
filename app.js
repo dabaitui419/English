@@ -14,11 +14,12 @@ const DEFAULT_STATE = {
   daily: {},               // "YYYY-MM-DD" -> { reviews, quizCorrect, quizTotal, listenCorrect, listenTotal }
   quiz: { correct: 0, total: 0 },
   listen: { correct: 0, total: 0 },
-  settings: { dailyGoal: 20, accent: 1, dark: false },
+  settings: { dailyGoal: 20, accent: 1, dark: false, gmInfinite: false },
   wordbook: [],            // 生词本（收藏"还不熟"的单词）
   achievements: [],        // 已解锁的成就 id
   cards: [],               // 已收集的卡片 id
-  lastDrawDate: ""         // 上次抽卡日期（YYYY-MM-DD）
+  lastDrawDate: "",        // 上次抽卡日期（YYYY-MM-DD）
+  customCards: []          // GM 自定义卡片
 };
 
 let state = loadState();
@@ -37,7 +38,8 @@ function normalizeState(obj) {
     wordbook: Array.isArray(o.wordbook) ? o.wordbook : [],
     achievements: Array.isArray(o.achievements) ? o.achievements : [],
     cards: Array.isArray(o.cards) ? o.cards : [],
-    lastDrawDate: o.lastDrawDate || ""
+    lastDrawDate: o.lastDrawDate || "",
+    customCards: Array.isArray(o.customCards) ? o.customCards : []
   };
 }
 
@@ -941,7 +943,12 @@ function gachaStudiedToday() {
   return !!(d && d.reviews > 0);
 }
 
+function getAllCards() {
+  return CARDS.concat(state.customCards || []);
+}
+
 function canDraw() {
+  if (state.settings.gmInfinite) return true;
   return gachaStudiedToday() && state.lastDrawDate !== todayKey();
 }
 
@@ -956,8 +963,9 @@ function rollRarity() {
 }
 
 function pickCard(rarity) {
-  let pool = CARDS.filter((c) => c.rarity === rarity);
-  if (!pool.length) pool = CARDS.filter((c) => c.rarity === "N");
+  const all = getAllCards();
+  let pool = all.filter((c) => c.rarity === rarity);
+  if (!pool.length) pool = all.filter((c) => c.rarity === "N");
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -1019,7 +1027,7 @@ function renderGacha() {
     if (hint) hint.textContent = "";
   }
   const ownedEl = $("gacha-owned"); if (ownedEl) ownedEl.textContent = state.cards.length;
-  const totalEl = $("gacha-total"); if (totalEl) totalEl.textContent = CARDS.length;
+  const totalEl = $("gacha-total"); if (totalEl) totalEl.textContent = getAllCards().length;
   renderCollection();
 }
 
@@ -1027,7 +1035,7 @@ function renderCollection() {
   const box = $("gacha-collection");
   if (!box) return;
   box.innerHTML = "";
-  CARDS.forEach((c) => {
+  getAllCards().forEach((c) => {
     const owned = state.cards.indexOf(c.id) !== -1;
     const el = document.createElement("div");
     el.className = "gcard rarity-" + c.rarity + (owned ? " owned" : " locked");
@@ -1042,6 +1050,85 @@ function renderCollection() {
 }
 
 $("btn-draw").addEventListener("click", drawCard);
+
+/* ---------- GM 模式 ---------- */
+function isGm() {
+  if (!cloudConfigured) return true; // 本地模式：本机就是你自己
+  if (!currentUser) return false;
+  const meta = currentUser.app_metadata || {};
+  return meta.role === "gm"; // 只认服务端 app_metadata，改前端文件无效
+}
+
+function renderGm() {
+  const panel = $("gm-panel");
+  if (panel) panel.style.display = isGm() ? "" : "none";
+  const inf = $("gm-infinite");
+  if (inf) {
+    inf.textContent = "♾️ 无限抽卡：" + (state.settings.gmInfinite ? "开" : "关");
+    inf.classList.toggle("on", !!state.settings.gmInfinite);
+  }
+  const list = $("gm-custom-list");
+  if (!list) return;
+  list.innerHTML = "";
+  (state.customCards || []).forEach((c, i) => {
+    const el = document.createElement("div");
+    el.className = "gm-custom-item";
+    el.innerHTML = `<span>${cardEmoji(c)}</span><span>${c.name}</span><span class="gm-custom-rar">${c.rarity}</span><button class="gm-del">删除</button>`;
+    el.querySelector(".gm-del").addEventListener("click", () => {
+      state.customCards.splice(i, 1);
+      state.cards = state.cards.filter((id) => id !== c.id);
+      saveState();
+      renderGm();
+      renderGacha();
+    });
+    list.appendChild(el);
+  });
+}
+
+$("gm-collect-all").addEventListener("click", () => {
+  getAllCards().forEach((c) => { if (state.cards.indexOf(c.id) === -1) state.cards.push(c.id); });
+  saveState();
+  renderGacha();
+  renderGm();
+});
+
+$("gm-clear-cards").addEventListener("click", () => {
+  if (confirm("确定清空你的卡册吗？")) {
+    state.cards = [];
+    saveState();
+    renderGacha();
+    renderGm();
+  }
+});
+
+$("gm-reset-draw").addEventListener("click", () => {
+  state.lastDrawDate = "";
+  saveState();
+  renderGacha();
+  renderGm();
+  alert("已重置今日抽卡限制，今天可以再抽一次～");
+});
+
+$("gm-infinite").addEventListener("click", () => {
+  state.settings.gmInfinite = !state.settings.gmInfinite;
+  saveState();
+  renderGm();
+  renderGacha();
+});
+
+$("gm-add-card").addEventListener("click", () => {
+  const name = $("gm-name").value.trim();
+  const series = $("gm-series").value;
+  const rarity = $("gm-rarity").value;
+  if (!name) { alert("请先填卡片名称"); return; }
+  const id = "custom-" + Date.now();
+  state.customCards.push({ id, name, series, rarity });
+  state.cards.push(id);
+  $("gm-name").value = "";
+  saveState();
+  renderGm();
+  renderGacha();
+});
 
 function renderStats() {
   $("st-streak").textContent = computeStreak();
@@ -1059,6 +1146,7 @@ function renderStats() {
 
   renderWeekChart();
   renderAchievements();
+  renderGm();
 }
 
 function renderWeekChart() {
