@@ -479,7 +479,7 @@ $("flashcard").addEventListener("click", (e) => {
   card.classList.toggle("flipped");
   $("card-actions").hidden = !card.classList.contains("flipped");
   $("learn-hint").hidden = card.classList.contains("flipped");
-  if (card.classList.contains("flipped")) playAudio(session[sessionIndex].example);
+  if (card.classList.contains("flipped")) playAudio(session[sessionIndex].word);
 });
 
 $("btn-known").addEventListener("click", () => answerCard(true));
