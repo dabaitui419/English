@@ -21,6 +21,7 @@
         <span>快乐学英语</span>
       </div>
       <div class="header-actions">
+        <button id="btn-theme" class="accent-toggle" title="切换深色/浅色">🌙</button>
         <button id="accent-toggle" class="accent-toggle" title="切换发音口音">🇬🇧 英音</button>
         <button id="streak-badge" class="streak-badge" title="连续学习天数">🔥 0 天</button>
         <button id="btn-logout" class="streak-badge" title="退出登录" hidden>退出</button>
@@ -34,6 +35,15 @@
         <div class="page-head">
           <h2>📚 背单词</h2>
           <p class="sub">点一点卡片，看看中文意思吧</p>
+        </div>
+
+        <div class="daily-sentence" id="daily-sentence">
+          <span class="ds-label">📅 每日一句</span>
+          <span id="ds-body" class="ds-body">
+            <span id="ds-text" class="ds-text"></span>
+            <span id="ds-trans" class="ds-trans"></span>
+          </span>
+          <button id="ds-play" class="sentence-play" aria-label="播放">🔊</button>
         </div>
 
         <div class="source-filter" id="source-filter">
@@ -159,6 +169,16 @@
         <div class="sentence-list" id="sentence-list"></div>
       </section>
 
+      <!-- ============ 生词本 ============ -->
+      <section id="page-wordbook" class="page">
+        <div class="page-head">
+          <h2>📒 生词本</h2>
+          <p class="sub">学习时点「还不熟」的单词会自动收进来</p>
+        </div>
+        <div id="wordbook-list" class="sentence-list"></div>
+        <p id="wordbook-empty" class="learn-hint" hidden>生词本还是空的～去「学习」页点「还不熟」收集单词吧</p>
+      </section>
+
       <!-- ============ 统计 ============ -->
       <section id="page-stats" class="page">
         <div class="page-head">
@@ -192,6 +212,11 @@
           <div class="week-chart" id="week-chart"></div>
         </div>
 
+        <div class="stat-panel">
+          <h3>🏅 我的成就</h3>
+          <div id="achievements" class="achievements"></div>
+        </div>
+
         <button id="btn-reset" class="btn-reset">清空学习记录 🗑️</button>
       </section>
     </main>
@@ -202,6 +227,7 @@
       <button class="tab" data-page="quiz"><span class="tab-icon">✏️</span><span>测验</span></button>
       <button class="tab" data-page="listen"><span class="tab-icon">🎧</span><span>听力</span></button>
       <button class="tab" data-page="speak"><span class="tab-icon">🗣️</span><span>口语</span></button>
+      <button class="tab" data-page="wordbook"><span class="tab-icon">📒</span><span>生词本</span></button>
       <button class="tab" data-page="stats"><span class="tab-icon">📊</span><span>我的</span></button>
     </nav>
   </div>

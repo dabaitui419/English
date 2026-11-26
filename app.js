@@ -14,7 +14,7 @@ const DEFAULT_STATE = {
   daily: {},               // "YYYY-MM-DD" -> { reviews, quizCorrect, quizTotal, listenCorrect, listenTotal }
   quiz: { correct: 0, total: 0 },
   listen: { correct: 0, total: 0 },
-  settings: { dailyGoal: 20, accent: 1 },
+  settings: { dailyGoal: 20, accent: 1, dark: false },
   wordbook: [],            // 生词本（收藏"还不熟"的单词）
   achievements: []         // 已解锁的成就 id
 };
@@ -278,6 +278,7 @@ const pages = {
   quiz: $("page-quiz"),
   listen: $("page-listen"),
   speak: $("page-speak"),
+  wordbook: $("page-wordbook"),
   stats: $("page-stats")
 };
 
@@ -292,6 +293,7 @@ function switchPage(name) {
   if (name === "stats") renderStats();
   if (name === "learn") renderLearn();
   if (name === "speak") renderSentences();
+  if (name === "wordbook") renderWordbook();
 }
 
 document.querySelector(".tab-bar").addEventListener("click", (e) => {
@@ -337,6 +339,18 @@ $("accent-toggle").addEventListener("click", () => {
   state.settings.accent = state.settings.accent === 2 ? 1 : 2;
   saveState();
   updateAccentToggle();
+});
+
+/* 深色模式切换 */
+function applyTheme(dark) {
+  document.body.classList.toggle("dark", !!dark);
+  const btn = $("btn-theme");
+  if (btn) btn.textContent = dark ? "☀️" : "🌙";
+}
+$("btn-theme").addEventListener("click", () => {
+  applyTheme(!state.settings.dark);
+  state.settings.dark = !state.settings.dark;
+  saveState();
 });
 
 function masteredCount() {
@@ -438,14 +452,17 @@ function answerCard(known) {
     p.nextReview = Date.now() + INTERVALS[p.level];
     p.correct += 1;
     p.mastered = p.level >= 5;
+    state.wordbook = state.wordbook.filter((w) => w !== word.word);
   } else {
     p.level = Math.max(0, p.level - 1);
     p.nextReview = Date.now() + 10 * 60 * 1000; // 10 分钟后再来
     p.wrong += 1;
     p.mastered = false;
+    if (!state.wordbook.includes(word.word)) state.wordbook.push(word.word);
   }
   state.progress[word.word] = p;
   recordStudy();
+  checkAchievements();
   sessionIndex++;
   if (sessionIndex >= session.length) {
     showLearnDone();
@@ -658,6 +675,7 @@ function finishQuiz() {
   $("quiz-result-emoji").textContent = emoji;
   $("quiz-result-text").innerHTML = `答对 <b>${sc}</b> / ${total} 题<span class="stars">${stars}</span>`;
   $("quiz-score").textContent = `⭐ ${quiz.score}`;
+  checkAchievements();
 }
 
 function pickPraise() {
@@ -779,6 +797,7 @@ function finishListen() {
   else { emoji = "🌱"; stars = ""; }
   $("listen-result-emoji").textContent = emoji;
   $("listen-result-text").innerHTML = `答对 <b>${sc}</b> / ${total} 题<span class="stars">${stars}</span>`;
+  checkAchievements();
 }
 
 $("btn-start-listen").addEventListener("click", startListen);
@@ -826,6 +845,86 @@ function accuracy(correct, total) {
   return Math.round((correct / total) * 100);
 }
 
+/* ---------- 每日一句 ---------- */
+function dailySentence() {
+  const idx = Math.floor(Date.now() / 86400000) % SENTENCES.length;
+  return SENTENCES[idx];
+}
+function renderDailySentence() {
+  const s = dailySentence();
+  const t = $("ds-text"); if (t) t.textContent = s.text;
+  const tr = $("ds-trans"); if (tr) tr.textContent = s.translation;
+}
+$("ds-play").addEventListener("click", () => playAudio(dailySentence().text, { rate: 0.9 }));
+
+/* ---------- 生词本 ---------- */
+function renderWordbook() {
+  const list = $("wordbook-list");
+  const empty = $("wordbook-empty");
+  if (!list) return;
+  list.innerHTML = "";
+  const words = (state.wordbook || []).slice().reverse();
+  if (!words.length) { if (empty) empty.hidden = false; return; }
+  if (empty) empty.hidden = true;
+  words.forEach((w) => {
+    const data = WORDS.find((x) => x.word === w) || { word: w, meaning: "", phonetic: "" };
+    const card = document.createElement("div");
+    card.className = "sentence-card";
+    card.innerHTML = `
+      <button class="sentence-play" aria-label="播放">🔊</button>
+      <div class="sentence-body">
+        <div class="sentence-text">${data.word}<span style="font-weight:400;color:var(--text-soft);margin-left:6px">${data.phonetic || ""}</span></div>
+        <div class="sentence-trans">${data.meaning}</div>
+      </div>
+      <button class="wb-remove">移出</button>`;
+    card.querySelector(".sentence-play").addEventListener("click", (e) => { e.stopPropagation(); playAudio(data.word); });
+    card.querySelector(".wb-remove").addEventListener("click", (e) => {
+      e.stopPropagation();
+      state.wordbook = state.wordbook.filter((x) => x !== w);
+      saveState();
+      renderWordbook();
+    });
+    list.appendChild(card);
+  });
+}
+
+/* ---------- 成就 ---------- */
+const ACHIEVEMENTS = [
+  { id: "words10", emoji: "🌱", name: "初出茅庐", check: () => masteredCount() >= 10 },
+  { id: "words50", emoji: "🌿", name: "词汇小能手", check: () => masteredCount() >= 50 },
+  { id: "words100", emoji: "🌳", name: "百词斩", check: () => masteredCount() >= 100 },
+  { id: "streak3", emoji: "🔥", name: "坚持 3 天", check: () => computeStreak() >= 3 },
+  { id: "streak7", emoji: "💪", name: "坚持 7 天", check: () => computeStreak() >= 7 },
+  { id: "quiz10", emoji: "🎯", name: "测验 10 题", check: () => (state.quiz.total || 0) >= 10 },
+  { id: "listen10", emoji: "🎧", name: "听力 10 题", check: () => (state.listen.total || 0) >= 10 },
+  { id: "wb10", emoji: "📒", name: "收集生词", check: () => (state.wordbook || []).length >= 10 },
+  { id: "review50", emoji: "📚", name: "复习 50 次", check: () => totalReviews() >= 50 }
+];
+
+function checkAchievements() {
+  let changed = false;
+  ACHIEVEMENTS.forEach((a) => {
+    if (state.achievements.indexOf(a.id) === -1 && a.check()) {
+      state.achievements.push(a.id);
+      changed = true;
+    }
+  });
+  if (changed) { saveState(); renderAchievements(); }
+}
+
+function renderAchievements() {
+  const box = $("achievements");
+  if (!box) return;
+  box.innerHTML = "";
+  ACHIEVEMENTS.forEach((a) => {
+    const el = document.createElement("div");
+    const unlocked = state.achievements.indexOf(a.id) !== -1;
+    el.className = "ach-item" + (unlocked ? " unlocked" : "");
+    el.innerHTML = `<div class="ach-emoji">${a.emoji}</div><div class="ach-name">${a.name}</div>`;
+    box.appendChild(el);
+  });
+}
+
 function renderStats() {
   $("st-streak").textContent = computeStreak();
   $("st-mastered").textContent = masteredCount();
@@ -841,6 +940,7 @@ function renderStats() {
   $("rate-listen-text").textContent = lAcc == null ? "-" : lAcc + "%";
 
   renderWeekChart();
+  renderAchievements();
 }
 
 function renderWeekChart() {
@@ -999,6 +1099,7 @@ function refreshAll() {
   updateAccentToggle();
   renderLearn();
   renderSentences();
+  renderDailySentence();
 }
 
 $("tab-login").addEventListener("click", () => setAuthMode("login"));
@@ -1011,6 +1112,7 @@ async function init() {
   cloudConfigured = cloudInit();
   loadCloudSession();
   buildSession();
+  applyTheme(!!state.settings.dark);
 
   if (cloudConfigured) {
     let user = null;

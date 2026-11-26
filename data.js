@@ -247,7 +247,33 @@ const WORDS = [
   { word: "shoes", phonetic: "/ʃuːz/", meaning: "鞋子", example: "My shoes are new.", exampleCn: "我的鞋子是新的。", source: ["pu"], category: "衣服" },
   { word: "socks", phonetic: "/sɑːks/", meaning: "袜子", example: "My socks are white.", exampleCn: "我的袜子是白色的。", source: ["pu"], category: "衣服" },
   { word: "hat", phonetic: "/hæt/", meaning: "帽子", example: "He wears a hat.", exampleCn: "他戴着帽子。", source: ["pu"], category: "衣服" },
-  { word: "jumper", phonetic: "/ˈdʒʌmpər/", meaning: "毛衣", example: "My jumper is warm.", exampleCn: "我的毛衣很暖和。", source: ["pu"], category: "衣服" }
+  { word: "jumper", phonetic: "/ˈdʒʌmpər/", meaning: "毛衣", example: "My jumper is warm.", exampleCn: "我的毛衣很暖和。", source: ["pu"], category: "衣服" },
+
+  /* ---------- 扩充词库（数字 / 动作 / 更多常用） ---------- */
+  { word: "one", phonetic: "/wʌn/", meaning: "一", example: "I have one pen.", exampleCn: "我有一支笔。", source: ["pu"], category: "数字" },
+  { word: "two", phonetic: "/tuː/", meaning: "二", example: "I have two hands.", exampleCn: "我有两只手。", source: ["pu"], category: "数字" },
+  { word: "three", phonetic: "/θriː/", meaning: "三", example: "There are three books.", exampleCn: "有三本书。", source: ["pu"], category: "数字" },
+  { word: "four", phonetic: "/fɔːr/", meaning: "四", example: "A car has four wheels.", exampleCn: "汽车有四个轮子。", source: ["pu"], category: "数字" },
+  { word: "five", phonetic: "/faɪv/", meaning: "五", example: "I have five fingers.", exampleCn: "我有五根手指。", source: ["nce", "pu"], category: "数字" },
+  { word: "six", phonetic: "/sɪks/", meaning: "六", example: "I get up at six.", exampleCn: "我六点起床。", source: ["pu"], category: "数字" },
+  { word: "seven", phonetic: "/ˈsevn/", meaning: "七", example: "A week has seven days.", exampleCn: "一周有七天。", source: ["pu"], category: "数字" },
+  { word: "eight", phonetic: "/eɪt/", meaning: "八", example: "There are eight apples.", exampleCn: "有八个苹果。", source: ["pu"], category: "数字" },
+  { word: "nine", phonetic: "/naɪn/", meaning: "九", example: "I have nine toys.", exampleCn: "我有九个玩具。", source: ["pu"], category: "数字" },
+  { word: "ten", phonetic: "/ten/", meaning: "十", example: "Count to ten.", exampleCn: "数到十。", source: ["nce", "pu"], category: "数字" },
+  { word: "wash", phonetic: "/wɑːʃ/", meaning: "洗", example: "Wash your hands.", exampleCn: "洗洗你的手。", source: ["pu"], category: "动作" },
+  { word: "cook", phonetic: "/kʊk/", meaning: "做饭", example: "My mum can cook.", exampleCn: "我妈妈会做饭。", source: ["pu"], category: "动作" },
+  { word: "help", phonetic: "/help/", meaning: "帮助", example: "Can you help me?", exampleCn: "你能帮我吗？", source: ["pu"], category: "动作" },
+  { word: "wait", phonetic: "/weɪt/", meaning: "等待", example: "Please wait for me.", exampleCn: "请等等我。", source: ["pu"], category: "动作" },
+  { word: "stop", phonetic: "/stɑːp/", meaning: "停止", example: "Stop and look.", exampleCn: "停下来看一看。", source: ["pu"], category: "动作" },
+  { word: "start", phonetic: "/stɑːrt/", meaning: "开始", example: "Let's start the game.", exampleCn: "我们开始游戏吧。", source: ["pu"], category: "动作" },
+  { word: "count", phonetic: "/kaʊnt/", meaning: "数", example: "Count the apples.", exampleCn: "数一数苹果。", source: ["pu"], category: "动作" },
+  { word: "shoulder", phonetic: "/ˈʃoʊldər/", meaning: "肩膀", example: "My shoulder hurts.", exampleCn: "我的肩膀疼。", source: ["pu"], category: "身体" },
+  { word: "knee", phonetic: "/niː/", meaning: "膝盖", example: "Bend your knees.", exampleCn: "弯一弯膝盖。", source: ["pu"], category: "身体" },
+  { word: "soup", phonetic: "/suːp/", meaning: "汤", example: "The soup is hot.", exampleCn: "汤很热。", source: ["pu"], category: "食物" },
+  { word: "potato", phonetic: "/pəˈteɪtoʊ/", meaning: "土豆", example: "I like potatoes.", exampleCn: "我喜欢土豆。", source: ["pu"], category: "食物" },
+  { word: "panda", phonetic: "/ˈpændə/", meaning: "熊猫", example: "The panda is cute.", exampleCn: "熊猫很可爱。", source: ["pu"], category: "动物" },
+  { word: "bear", phonetic: "/ber/", meaning: "熊", example: "The bear is big.", exampleCn: "熊很大。", source: ["pu"], category: "动物" },
+  { word: "lesson", phonetic: "/ˈlesn/", meaning: "课", example: "We have an English lesson.", exampleCn: "我们有一节英语课。", source: ["pu"], category: "学校" }
 ];
 
 /* ---------- 口语 / 每日句子（适合小学生的日常表达与课堂用语） ---------- */
