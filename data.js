@@ -303,3 +303,103 @@ const SENTENCES = [
   { text: "Can I help you?", translation: "我能帮你吗？", category: "日常" },
   { text: "Where is my book?", translation: "我的书在哪里？", category: "日常" }
 ];
+
+/* =========================================================
+ * 抽卡系统 · 稀有度配置
+ * 概率参考用户提供的表，合计 100%
+ * ========================================================= */
+const RARITIES = [
+  { id: "N", name: "Normal", full: "普通", chance: 50 },
+  { id: "R", name: "Rare", full: "稀有", chance: 30 },
+  { id: "SR", name: "Super Rare", full: "超稀有", chance: 12 },
+  { id: "SSR", name: "Super Special Rare", full: "特超稀有", chance: 4 },
+  { id: "HR", name: "Holographic Rare", full: "全息立体", chance: 2 },
+  { id: "UR", name: "Ultra Rare", full: "极度稀有", chance: 1.5 },
+  { id: "SP", name: "Special", full: "特殊限定", chance: 0.3 },
+  { id: "CR", name: "Collector's Rare", full: "收藏家稀有", chance: 0.15 },
+  { id: "ZR", name: "Zenith Rare", full: "顶级", chance: 0.05 }
+];
+
+/* =========================================================
+ * 抽卡系统 · 卡片库
+ * 三个系列：ultraman(奥特曼)、mlp(小马宝莉)、pokemon(宝可梦)
+ * 按稀有度分档，抽卡时先按概率定稀有度，再从该档随机取一张
+ * ========================================================= */
+const CARDS = [
+  /* ---------- N（普通） ---------- */
+  { id: "pk-pikachu", name: "皮卡丘", series: "pokemon", rarity: "N" },
+  { id: "pk-bulbasaur", name: "妙蛙种子", series: "pokemon", rarity: "N" },
+  { id: "pk-charmander", name: "小火龙", series: "pokemon", rarity: "N" },
+  { id: "pk-squirtle", name: "杰尼龟", series: "pokemon", rarity: "N" },
+  { id: "ml-twilight", name: "紫悦", series: "mlp", rarity: "N" },
+  { id: "ml-applejack", name: "苹果嘉儿", series: "mlp", rarity: "N" },
+  { id: "ul-tiga", name: "迪迦奥特曼", series: "ultraman", rarity: "N" },
+  { id: "ul-orig", name: "初代奥特曼", series: "ultraman", rarity: "N" },
+
+  /* ---------- R（稀有） ---------- */
+  { id: "pk-eevee", name: "伊布", series: "pokemon", rarity: "R" },
+  { id: "pk-snorlax", name: "卡比兽", series: "pokemon", rarity: "R" },
+  { id: "ml-rainbow", name: "云宝", series: "mlp", rarity: "R" },
+  { id: "ml-rarity", name: "珍奇", series: "mlp", rarity: "R" },
+  { id: "ul-zero", name: "赛罗奥特曼", series: "ultraman", rarity: "R" },
+  { id: "ul-seven", name: "赛文奥特曼", series: "ultraman", rarity: "R" },
+  { id: "ul-leo", name: "雷欧奥特曼", series: "ultraman", rarity: "R" },
+
+  /* ---------- SR（超稀有） ---------- */
+  { id: "pk-charizard", name: "喷火龙", series: "pokemon", rarity: "SR" },
+  { id: "pk-blastoise", name: "水箭龟", series: "pokemon", rarity: "SR" },
+  { id: "ml-pinkie", name: "碧琪", series: "mlp", rarity: "SR" },
+  { id: "ml-fluttershy", name: "柔柔", series: "mlp", rarity: "SR" },
+  { id: "ul-zeta", name: "泽塔奥特曼", series: "ultraman", rarity: "SR" },
+  { id: "ul-geed", name: "捷德奥特曼", series: "ultraman", rarity: "SR" },
+
+  /* ---------- SSR（特超稀有） ---------- */
+  { id: "pk-mewtwo", name: "超梦", series: "pokemon", rarity: "SSR" },
+  { id: "ml-luna", name: "月亮公主", series: "mlp", rarity: "SSR" },
+  { id: "ul-taiga", name: "泰迦奥特曼", series: "ultraman", rarity: "SSR" },
+  { id: "ml-celestia", name: "宇宙公主", series: "mlp", rarity: "SSR" },
+  { id: "pk-venusaur", name: "妙蛙花", series: "pokemon", rarity: "SSR" },
+
+  /* ---------- HR（全息立体） ---------- */
+  { id: "pk-mew", name: "梦幻", series: "pokemon", rarity: "HR" },
+  { id: "ul-trigger", name: "特利迦奥特曼", series: "ultraman", rarity: "HR" },
+  { id: "ml-starlight", name: "星光熠熠", series: "mlp", rarity: "HR" },
+  { id: "pk-moltres", name: "火焰鸟", series: "pokemon", rarity: "HR" },
+
+  /* ---------- UR（极度稀有） ---------- */
+  { id: "pk-hooh", name: "凤凰", series: "pokemon", rarity: "UR" },
+  { id: "ul-noa", name: "诺亚奥特曼", series: "ultraman", rarity: "UR" },
+  { id: "ml-cadance", name: "音韵公主", series: "mlp", rarity: "UR" },
+  { id: "pk-dialga", name: "帝牙卢卡", series: "pokemon", rarity: "UR" },
+
+  /* ---------- SP（特殊限定） ---------- */
+  { id: "ul-shining-zero", name: "光辉赛罗", series: "ultraman", rarity: "SP" },
+  { id: "pk-arceus", name: "阿尔宙斯", series: "pokemon", rarity: "SP" },
+  { id: "ml-sweetiebelle", name: "甜贝儿", series: "mlp", rarity: "SP" },
+
+  /* ---------- CR（收藏家稀有） ---------- */
+  { id: "ul-dark-zagi", name: "黑暗扎基", series: "ultraman", rarity: "CR" },
+  { id: "pk-mewtwo-x", name: "超级超梦X", series: "pokemon", rarity: "CR" },
+  { id: "ml-shining-armor", name: "银甲闪闪", series: "mlp", rarity: "CR" },
+
+  /* ---------- ZR（顶级） ---------- */
+  { id: "ul-ultra-zero", name: "究极赛罗", series: "ultraman", rarity: "ZR" },
+  { id: "pk-arceus-z", name: "创世阿尔宙斯", series: "pokemon", rarity: "ZR" },
+  { id: "ml-alicorn-twilight", name: "天角兽紫悦", series: "mlp", rarity: "ZR" }
+];
+
+/* 卡片专属图标（没有图片时显示；图片优先用卡片上的 img 字段） */
+const CARD_EMOJI = {
+  "pk-pikachu": "⚡", "pk-bulbasaur": "🌱", "pk-charmander": "🔥", "pk-squirtle": "💧",
+  "pk-eevee": "🐾", "pk-snorlax": "😴", "pk-charizard": "🐉", "pk-blastoise": "🐢",
+  "pk-mewtwo": "🔮", "pk-venusaur": "🌺", "pk-mew": "🌟", "pk-moltres": "🐦",
+  "pk-hooh": "🦅", "pk-dialga": "⏳", "pk-arceus": "🧬", "pk-mewtwo-x": "🔴",
+  "pk-arceus-z": "🌍",
+  "ml-twilight": "🌙", "ml-applejack": "🍎", "ml-rainbow": "🌈", "ml-rarity": "💎",
+  "ml-pinkie": "🎈", "ml-fluttershy": "🦋", "ml-luna": "🌕", "ml-celestia": "☀️",
+  "ml-starlight": "💜", "ml-cadance": "💗", "ml-sweetiebelle": "🎀", "ml-shining-armor": "⚔️",
+  "ml-alicorn-twilight": "🦄",
+  "ul-tiga": "🦸", "ul-orig": "👾", "ul-zero": "🌀", "ul-seven": "🛡️", "ul-leo": "🦁",
+  "ul-zeta": "⭐", "ul-geed": "🔷", "ul-taiga": "💫", "ul-trigger": "✨", "ul-noa": "🌌",
+  "ul-shining-zero": "🌠", "ul-dark-zagi": "🖤", "ul-ultra-zero": "👑"
+};

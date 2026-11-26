@@ -886,3 +886,81 @@ body.dark .auth-screen { background: var(--bg); }
 body.dark .daily-sentence { background: var(--card); }
 body.dark .ach-item { background: #262b3d; }
 body.dark .ach-item.unlocked { background: var(--primary-light); }
+
+/* ---------- 抽卡 ---------- */
+.gacha-draw { text-align: center; margin-bottom: 16px; }
+.gacha-display {
+  width: 200px;
+  height: 280px;
+  margin: 0 auto 16px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+  color: var(--text);
+}
+.gacha-display.pop { animation: gachaPop .6s cubic-bezier(.34,1.56,.64,1); }
+@keyframes gachaPop {
+  0% { transform: scale(.4) rotate(-12deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.gacha-placeholder { color: var(--text-soft); font-size: 30px; text-align: center; }
+.gacha-placeholder span { font-size: 13px; }
+.gacha-hint { color: var(--text-soft); font-size: 13px; margin-top: 10px; min-height: 18px; }
+.gacha-summary { text-align: center; color: var(--text-soft); font-size: 14px; margin-bottom: 14px; }
+.gacha-summary b { color: var(--text); }
+
+.gcard-rarity { font-size: 13px; font-weight: 800; letter-spacing: 1px; }
+.gcard-name { font-size: 26px; font-weight: 900; margin: 8px 0; text-align: center; padding: 0 8px; }
+.gcard-series { font-size: 13px; font-weight: 700; opacity: .9; }
+
+.gacha-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 8px;
+}
+.gcard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 8px 4px;
+  aspect-ratio: 3 / 4;
+  text-align: center;
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.gcard .gcard-rar { font-size: 10px; font-weight: 800; opacity: .95; }
+.gcard .gcard-body { font-size: 12px; font-weight: 800; margin: 4px 0; line-height: 1.2; }
+.gcard .gcard-series { font-size: 9px; opacity: .85; }
+.gcard.locked { filter: grayscale(1); opacity: .32; }
+.gcard.locked .gcard-body { color: #fff; }
+
+/* 稀有度配色 */
+.rarity-N { background: linear-gradient(135deg, #8f98ad, #b9c0cf); color: #fff; }
+.rarity-R { background: linear-gradient(135deg, #2f7fe8, #63b1ff); color: #fff; }
+.rarity-SR { background: linear-gradient(135deg, #7b5cf0, #a98bff); color: #fff; }
+.rarity-SSR { background: linear-gradient(135deg, #ec4899, #f97316); color: #fff; }
+.rarity-HR { background: linear-gradient(135deg, #22d3ee, #a855f7, #f59e0b); color: #fff; }
+.rarity-UR { background: linear-gradient(135deg, #b8860b, #f7e08a, #d4a017); color: #3a2a00; }
+.rarity-SP { background: linear-gradient(135deg, #ef4444, #f97316); color: #fff; }
+.rarity-CR { background: linear-gradient(135deg, #111827, #4b5563, #d4a017); color: #fff; }
+.rarity-ZR { background: linear-gradient(135deg, #ff0055, #ffcc00, #00ffcc, #3366ff); color: #fff; }
+
+body.dark .gacha-display { background: var(--card); }
+
+/* 卡面图标 / 图片 */
+.gcard-emoji { font-size: 34px; line-height: 40px; text-align: center; }
+.gacha-display .gcard-emoji { font-size: 84px; line-height: 96px; }
+.gacha-art { display: flex; align-items: center; justify-content: center; margin: 8px 0; }
+.gcard-art { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; }
+.gcard-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+.gacha-display .gcard-img { border-radius: 16px; }
+.gcard-art-sm { display: flex; align-items: center; justify-content: center; height: 44px; }

@@ -179,6 +179,25 @@
         <p id="wordbook-empty" class="learn-hint" hidden>生词本还是空的～去「学习」页点「还不熟」收集单词吧</p>
       </section>
 
+      <!-- ============ 抽卡 ============ -->
+      <section id="page-gacha" class="page">
+        <div class="page-head">
+          <h2>🎴 每日抽卡</h2>
+          <p class="sub">每天学习后抽 1 张，收集奥特曼 / 小马宝莉 / 宝可梦</p>
+        </div>
+
+        <div class="gacha-draw">
+          <div id="gacha-display" class="gacha-display">
+            <div class="gacha-placeholder">🎴<br><span>点下方按钮抽卡</span></div>
+          </div>
+          <button id="btn-draw" class="btn-primary">抽卡 🎴</button>
+          <p id="gacha-hint" class="gacha-hint"></p>
+        </div>
+
+        <div class="gacha-summary">已收集 <b id="gacha-owned">0</b> / <b id="gacha-total">0</b> 张</div>
+        <div id="gacha-collection" class="gacha-grid"></div>
+      </section>
+
       <!-- ============ 统计 ============ -->
       <section id="page-stats" class="page">
         <div class="page-head">
@@ -227,7 +246,8 @@
       <button class="tab" data-page="quiz"><span class="tab-icon">✏️</span><span>测验</span></button>
       <button class="tab" data-page="listen"><span class="tab-icon">🎧</span><span>听力</span></button>
       <button class="tab" data-page="speak"><span class="tab-icon">🗣️</span><span>口语</span></button>
-      <button class="tab" data-page="wordbook"><span class="tab-icon">📒</span><span>生词本</span></button>
+      <button class="tab" data-page="wordbook"><span class="tab-icon">📒</span><span>生词</span></button>
+      <button class="tab" data-page="gacha"><span class="tab-icon">🎴</span><span>抽卡</span></button>
       <button class="tab" data-page="stats"><span class="tab-icon">📊</span><span>我的</span></button>
     </nav>
   </div>

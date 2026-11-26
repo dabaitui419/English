@@ -16,7 +16,9 @@ const DEFAULT_STATE = {
   listen: { correct: 0, total: 0 },
   settings: { dailyGoal: 20, accent: 1, dark: false },
   wordbook: [],            // 生词本（收藏"还不熟"的单词）
-  achievements: []         // 已解锁的成就 id
+  achievements: [],        // 已解锁的成就 id
+  cards: [],               // 已收集的卡片 id
+  lastDrawDate: ""         // 上次抽卡日期（YYYY-MM-DD）
 };
 
 let state = loadState();
@@ -33,7 +35,9 @@ function normalizeState(obj) {
     listen: o.listen || { correct: 0, total: 0 },
     settings: { ...base.settings, ...(o.settings || {}) },
     wordbook: Array.isArray(o.wordbook) ? o.wordbook : [],
-    achievements: Array.isArray(o.achievements) ? o.achievements : []
+    achievements: Array.isArray(o.achievements) ? o.achievements : [],
+    cards: Array.isArray(o.cards) ? o.cards : [],
+    lastDrawDate: o.lastDrawDate || ""
   };
 }
 
@@ -279,6 +283,7 @@ const pages = {
   listen: $("page-listen"),
   speak: $("page-speak"),
   wordbook: $("page-wordbook"),
+  gacha: $("page-gacha"),
   stats: $("page-stats")
 };
 
@@ -294,6 +299,7 @@ function switchPage(name) {
   if (name === "learn") renderLearn();
   if (name === "speak") renderSentences();
   if (name === "wordbook") renderWordbook();
+  if (name === "gacha") renderGacha();
 }
 
 document.querySelector(".tab-bar").addEventListener("click", (e) => {
@@ -924,6 +930,118 @@ function renderAchievements() {
     box.appendChild(el);
   });
 }
+
+/* ---------- 抽卡 ---------- */
+function seriesName(s) {
+  return s === "ultraman" ? "奥特曼" : s === "mlp" ? "小马宝莉" : "宝可梦";
+}
+
+function gachaStudiedToday() {
+  const d = state.daily[todayKey()];
+  return !!(d && d.reviews > 0);
+}
+
+function canDraw() {
+  return gachaStudiedToday() && state.lastDrawDate !== todayKey();
+}
+
+function rollRarity() {
+  const total = RARITIES.reduce((s, r) => s + r.chance, 0);
+  let x = Math.random() * total;
+  for (const r of RARITIES) {
+    x -= r.chance;
+    if (x <= 0) return r.id;
+  }
+  return RARITIES[0].id;
+}
+
+function pickCard(rarity) {
+  let pool = CARDS.filter((c) => c.rarity === rarity);
+  if (!pool.length) pool = CARDS.filter((c) => c.rarity === "N");
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function drawCard() {
+  if (!canDraw()) { renderGacha(); return; }
+  const rarity = rollRarity();
+  const card = pickCard(rarity);
+  state.lastDrawDate = todayKey();
+  if (state.cards.indexOf(card.id) === -1) state.cards.push(card.id);
+  saveState();
+  showGachaResult(card);
+  checkAchievements();
+  renderGacha();
+}
+
+function cardEmoji(card) {
+  return CARD_EMOJI[card.id] || (card.series === "ultraman" ? "👾" : card.series === "mlp" ? "🦄" : "🔴");
+}
+
+function cardArt(card) {
+  const emoji = `<div class="gcard-emoji">${cardEmoji(card)}</div>`;
+  if (card.img) {
+    return `<div class="gcard-art">${emoji}<img class="gcard-img" src="${card.img}" alt="${card.name}" onerror="this.remove()"></div>`;
+  }
+  return emoji;
+}
+
+function showGachaResult(card) {
+  const disp = $("gacha-display");
+  const r = RARITIES.find((x) => x.id === card.rarity);
+  disp.className = "gacha-display rarity-" + card.rarity;
+  disp.innerHTML = `
+    <div class="gcard-rarity">${card.rarity} · ${r.full}</div>
+    <div class="gacha-art">${cardArt(card)}</div>
+    <div class="gcard-name">${card.name}</div>
+    <div class="gcard-series">${seriesName(card.series)}</div>`;
+  void disp.offsetWidth;
+  disp.classList.add("pop");
+  setTimeout(() => disp.classList.remove("pop"), 700);
+}
+
+function renderGacha() {
+  const btn = $("btn-draw");
+  const hint = $("gacha-hint");
+  if (!btn) return;
+  const studied = gachaStudiedToday();
+  const drawn = state.lastDrawDate === todayKey();
+  if (drawn) {
+    btn.disabled = true;
+    btn.textContent = "今天已抽过啦，明天再来 🌙";
+    if (hint) hint.textContent = "";
+  } else if (!studied) {
+    btn.disabled = true;
+    btn.textContent = "抽卡 🎴";
+    if (hint) hint.textContent = "今天还没学习哦～去「学习」页背几个单词就能抽卡啦";
+  } else {
+    btn.disabled = false;
+    btn.textContent = "抽卡 🎴（今日可抽 1 次）";
+    if (hint) hint.textContent = "";
+  }
+  const ownedEl = $("gacha-owned"); if (ownedEl) ownedEl.textContent = state.cards.length;
+  const totalEl = $("gacha-total"); if (totalEl) totalEl.textContent = CARDS.length;
+  renderCollection();
+}
+
+function renderCollection() {
+  const box = $("gacha-collection");
+  if (!box) return;
+  box.innerHTML = "";
+  CARDS.forEach((c) => {
+    const owned = state.cards.indexOf(c.id) !== -1;
+    const el = document.createElement("div");
+    el.className = "gcard rarity-" + c.rarity + (owned ? " owned" : " locked");
+    const art = owned ? cardArt(c) : `<div class="gcard-emoji">？</div>`;
+    el.innerHTML = `
+      <div class="gcard-rar">${c.rarity}</div>
+      <div class="gcard-art-sm">${art}</div>
+      <div class="gcard-body">${owned ? c.name : "？"}</div>
+      <div class="gcard-series">${owned ? seriesName(c.series) : "未收集"}</div>`;
+    box.appendChild(el);
+  });
+}
+
+$("btn-draw").addEventListener("click", drawCard);
 
 function renderStats() {
   $("st-streak").textContent = computeStreak();
