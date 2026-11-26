@@ -1,0 +1,15 @@
+{
+  "name": "快乐学英语 · 小学生英语学习",
+  "short_name": "快乐学英语",
+  "description": "基于新概念英语第一册与剑桥 Power Up 的小学生英语学习应用：背单词、测验、听力、口语、学习统计。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F7FF",
+  "theme_color": "#4F6EF7",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
