@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#4F6EF7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="快乐学英语">
+  <title>快乐学英语 · 小学生英语学习</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 顶部栏 -->
+    <header class="app-header">
+      <div class="app-title">
+        <span class="mascot">🦉</span>
+        <span>快乐学英语</span>
+      </div>
+      <div class="header-actions">
+        <button id="accent-toggle" class="accent-toggle" title="切换发音口音">🇬🇧 英音</button>
+        <button id="streak-badge" class="streak-badge" title="连续学习天数">🔥 0 天</button>
+        <button id="btn-logout" class="streak-badge" title="退出登录" hidden>退出</button>
+      </div>
+    </header>
+
+    <!-- 页面主体 -->
+    <main class="app-main">
+      <!-- ============ 学习（单词卡） ============ -->
+      <section id="page-learn" class="page active">
+        <div class="page-head">
+          <h2>📚 背单词</h2>
+          <p class="sub">点一点卡片，看看中文意思吧</p>
+        </div>
+
+        <div class="source-filter" id="source-filter">
+          <button class="chip active" data-source="all">全部</button>
+          <button class="chip" data-source="nce">📘 新概念</button>
+          <button class="chip" data-source="pu">🎒 Power Up</button>
+        </div>
+
+        <div class="daily-goal">
+          <div class="goal-bar"><div id="goal-progress" class="goal-progress"></div></div>
+          <div class="goal-text">今日目标 <b id="goal-label">0 / 20</b></div>
+        </div>
+
+        <div class="flashcard-wrap">
+          <div id="flashcard" class="flashcard">
+            <div class="flashcard-inner">
+              <div class="flashcard-face front">
+                <span id="card-tags" class="card-tags"></span>
+                <div id="card-word" class="card-word">准备好了吗？</div>
+                <div id="card-phonetic" class="card-phonetic"></div>
+                <button id="btn-speak-card" class="btn-speak" aria-label="发音">🔊</button>
+              </div>
+              <div class="flashcard-face back">
+                <div id="card-meaning" class="card-meaning"></div>
+                <div id="card-example" class="card-example"></div>
+                <div id="card-example-cn" class="card-example-cn"></div>
+                <button id="btn-speak-card2" class="btn-speak" aria-label="发音">🔊</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p id="learn-hint" class="learn-hint">👆 点卡片看答案</p>
+
+        <div class="card-actions" id="card-actions" hidden>
+          <button id="btn-unknown" class="btn-unknown">😅 还不熟</button>
+          <button id="btn-known" class="btn-known">😄 认识啦</button>
+        </div>
+
+        <div class="session-info">
+          <span id="session-progress">本轮 0 / 0</span>
+        </div>
+      </section>
+
+      <!-- ============ 测验 ============ -->
+      <section id="page-quiz" class="page">
+        <div class="page-head">
+          <h2>✏️ 单词测验</h2>
+          <p class="sub">选一选，看看你能拿几颗星</p>
+        </div>
+
+        <div class="quiz-setup" id="quiz-setup">
+          <div class="mode-select">
+            <button class="chip active" data-mode="choice">选择题</button>
+            <button class="chip" data-mode="spell">拼写挑战</button>
+          </div>
+          <button id="btn-start-quiz" class="btn-primary">开始测验 🚀</button>
+        </div>
+
+        <div class="quiz-area" id="quiz-area" hidden>
+          <div class="quiz-top">
+            <span id="quiz-progress">第 1 / 10 题</span>
+            <span id="quiz-score">⭐ 0</span>
+          </div>
+          <div id="quiz-prompt" class="quiz-prompt"></div>
+          <div id="quiz-options" class="quiz-options"></div>
+          <div id="quiz-spell-box" class="quiz-spell-box" hidden>
+            <input id="spell-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="输入英文单词">
+            <button id="btn-spell-check" class="btn-primary">检查 ✔</button>
+          </div>
+        </div>
+
+        <div class="quiz-result" id="quiz-result" hidden>
+          <div id="quiz-result-emoji" class="result-emoji"></div>
+          <div id="quiz-result-text" class="result-text"></div>
+          <button id="btn-quiz-again" class="btn-primary">再测一次 🔁</button>
+        </div>
+      </section>
+
+      <!-- ============ 听力 ============ -->
+      <section id="page-listen" class="page">
+        <div class="page-head">
+          <h2>🎧 听力练习</h2>
+          <p class="sub">听一听发音，选出你听到的单词</p>
+        </div>
+
+        <div class="listen-setup" id="listen-setup">
+          <button id="btn-start-listen" class="btn-primary">开始练习 🎧</button>
+        </div>
+
+        <div class="listen-area" id="listen-area" hidden>
+          <div class="listen-top">
+            <span id="listen-progress">第 1 / 10 题</span>
+            <span id="listen-score">⭐ 0</span>
+          </div>
+          <div class="listen-player">
+            <button id="btn-play-audio" class="btn-play-audio">🔊</button>
+            <button id="btn-play-slow" class="btn-play-slow">🐢 慢速</button>
+          </div>
+          <div id="listen-options" class="quiz-options"></div>
+        </div>
+
+        <div class="quiz-result" id="listen-result" hidden>
+          <div id="listen-result-emoji" class="result-emoji"></div>
+          <div id="listen-result-text" class="result-text"></div>
+          <button id="btn-listen-again" class="btn-primary">再练一次 🔁</button>
+        </div>
+      </section>
+
+      <!-- ============ 口语 ============ -->
+      <section id="page-speak" class="page">
+        <div class="page-head">
+          <h2>🗣️ 口语 / 句子</h2>
+          <p class="sub">点句子听发音，跟着大声读出来</p>
+        </div>
+
+        <div class="sentence-tabs" id="sentence-tabs">
+          <button class="chip active" data-cat="all">全部</button>
+          <button class="chip" data-cat="日常">日常用语</button>
+          <button class="chip" data-cat="课堂">课堂用语</button>
+        </div>
+
+        <div class="sentence-list" id="sentence-list"></div>
+      </section>
+
+      <!-- ============ 统计 ============ -->
+      <section id="page-stats" class="page">
+        <div class="page-head">
+          <h2>📊 我的学习</h2>
+          <p class="sub">看看你有多棒！</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card stat-streak"><div class="stat-num" id="st-streak">0</div><div class="stat-label">连续天数</div></div>
+          <div class="stat-card stat-mastered"><div class="stat-num" id="st-mastered">0</div><div class="stat-label">已掌握单词</div></div>
+          <div class="stat-card stat-today"><div class="stat-num" id="st-today">0</div><div class="stat-label">今日学习</div></div>
+          <div class="stat-card stat-total"><div class="stat-num" id="st-total">0</div><div class="stat-label">累计学习</div></div>
+        </div>
+
+        <div class="stat-panel">
+          <h3>📈 正确率</h3>
+          <div class="rate-row">
+            <span>单词测验</span>
+            <div class="rate-bar"><div id="rate-quiz" class="rate-fill"></div></div>
+            <span id="rate-quiz-text">-</span>
+          </div>
+          <div class="rate-row">
+            <span>听力练习</span>
+            <div class="rate-bar"><div id="rate-listen" class="rate-fill"></div></div>
+            <span id="rate-listen-text">-</span>
+          </div>
+        </div>
+
+        <div class="stat-panel">
+          <h3>📅 最近 7 天学习</h3>
+          <div class="week-chart" id="week-chart"></div>
+        </div>
+
+        <button id="btn-reset" class="btn-reset">清空学习记录 🗑️</button>
+      </section>
+    </main>
+
+    <!-- 底部导航 -->
+    <nav class="tab-bar">
+      <button class="tab active" data-page="learn"><span class="tab-icon">📚</span><span>学习</span></button>
+      <button class="tab" data-page="quiz"><span class="tab-icon">✏️</span><span>测验</span></button>
+      <button class="tab" data-page="listen"><span class="tab-icon">🎧</span><span>听力</span></button>
+      <button class="tab" data-page="speak"><span class="tab-icon">🗣️</span><span>口语</span></button>
+      <button class="tab" data-page="stats"><span class="tab-icon">📊</span><span>我的</span></button>
+    </nav>
+  </div>
+
+  <!-- 登录 / 注册 覆盖层 -->
+  <div id="auth-screen" class="auth-screen" hidden>
+    <div class="auth-card">
+      <div class="auth-logo">🦉</div>
+      <h2>快乐学英语</h2>
+      <p class="auth-sub">登录后，学习记录会保存到云端、可跨设备同步</p>
+      <div id="auth-tabs">
+        <button id="tab-login" class="chip active">登录</button>
+        <button id="tab-signup" class="chip">注册</button>
+      </div>
+      <div class="auth-fields">
+        <input id="auth-nickname" type="text" placeholder="昵称（注册时填）" autocomplete="nickname" hidden>
+        <input id="auth-email" type="email" placeholder="邮箱" autocomplete="email">
+        <input id="auth-password" type="password" placeholder="密码（至少 6 位）" autocomplete="current-password">
+      </div>
+      <div id="auth-error" class="auth-error"></div>
+      <button id="btn-auth-submit" class="btn-primary">登录</button>
+      <p id="auth-hint" class="auth-hint">还没有账号？点上面「注册」创建一个</p>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
