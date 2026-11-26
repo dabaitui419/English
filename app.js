@@ -51,46 +51,98 @@ function saveState() {
   scheduleCloudSave();
 }
 
-/* ---------------- 云端账号（Supabase） ---------------- */
-let supabase = null;
+/* ---------------- 云端账号（Supabase，直接用 fetch，无第三方 SDK/CDN 依赖） ---------------- */
 let currentUser = null;
 let cloudConfigured = false;
 let cloudSaveTimer = null;
 
-const SUPABASE_CDN = [
-  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
-  "https://unpkg.com/@supabase/supabase-js@2"
-];
+const CLOUD = { url: "", key: "" };
 
-function loadSupabaseSDK() {
-  return new Promise((resolve, reject) => {
-    if (window.supabase) { resolve(window.supabase); return; }
-    let i = 0;
-    const tryNext = () => {
-      if (i >= SUPABASE_CDN.length) { reject(new Error("SDK load failed")); return; }
-      const s = document.createElement("script");
-      s.src = SUPABASE_CDN[i++];
-      s.onload = () => resolve(window.supabase);
-      s.onerror = tryNext;
-      document.head.appendChild(s);
-    };
-    tryNext();
-  });
+function cloudInit() {
+  if (typeof SUPABASE_URL === "string" && SUPABASE_URL && typeof SUPABASE_ANON_KEY === "string" && SUPABASE_ANON_KEY) {
+    CLOUD.url = SUPABASE_URL.replace(/\/+$/, "");
+    CLOUD.key = SUPABASE_ANON_KEY;
+    return true;
+  }
+  return false;
 }
 
-async function initSupabase() {
-  if (!(typeof SUPABASE_URL === "string" && SUPABASE_URL && typeof SUPABASE_ANON_KEY === "string" && SUPABASE_ANON_KEY)) {
-    supabase = null;
-    cloudConfigured = false;
-    return;
-  }
+const SESSION_KEY = "happy_english_session_v1";
+let cloudSession = null;
+
+function loadCloudSession() {
   try {
-    const sb = await loadSupabaseSDK();
-    supabase = sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    cloudConfigured = true;
+    const raw = localStorage.getItem(SESSION_KEY);
+    cloudSession = raw ? JSON.parse(raw) : null;
   } catch (e) {
-    supabase = null;
-    cloudConfigured = false;
+    cloudSession = null;
+  }
+}
+function saveCloudSession(s) {
+  cloudSession = s;
+  try {
+    if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+    else localStorage.removeItem(SESSION_KEY);
+  } catch (e) {}
+}
+
+async function cloudFetch(path, opts) {
+  opts = opts || {};
+  const headers = { "apikey": CLOUD.key, "Content-Type": "application/json" };
+  if (opts.token) headers["Authorization"] = "Bearer " + opts.token;
+  if (opts.prefer) headers["Prefer"] = opts.prefer;
+  const res = await fetch(CLOUD.url + path, {
+    method: opts.method || "GET",
+    headers,
+    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+  if (!res.ok) {
+    const msg = (data && (data.msg || data.message || data.error_description || data.error)) || ("HTTP " + res.status);
+    const err = new Error(msg);
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+function authPath(p) { return "/auth/v1" + p; }
+function restPath(p) { return "/rest/v1" + p; }
+
+function pickSession(r) {
+  if (!r) return null;
+  const s = r.session || r;
+  if (s && s.access_token) {
+    return {
+      access_token: s.access_token,
+      refresh_token: s.refresh_token,
+      expires_in: s.expires_in,
+      user: r.user || s.user
+    };
+  }
+  return null;
+}
+
+async function ensureFreshSession() {
+  loadCloudSession();
+  if (!cloudSession || !cloudSession.access_token) return null;
+  if (Date.now() < (cloudSession.expires_at || 0) - 60000) return cloudSession;
+  try {
+    const r = await cloudFetch(authPath("/token?grant_type=refresh_token"), { method: "POST", body: { refresh_token: cloudSession.refresh_token } });
+    const s = {
+      access_token: r.access_token,
+      refresh_token: r.refresh_token,
+      expires_at: Date.now() + (r.expires_in || 3600) * 1000,
+      user: r.user || cloudSession.user
+    };
+    saveCloudSession(s);
+    return s;
+  } catch (e) {
+    saveCloudSession(null);
+    return null;
   }
 }
 
@@ -101,24 +153,33 @@ function scheduleCloudSave() {
 }
 
 async function saveToCloud() {
-  if (!supabase || !currentUser) return;
+  if (!cloudConfigured || !currentUser) return;
+  const s = await ensureFreshSession();
+  if (!s) return;
   try {
-    await supabase.from("profiles").upsert({
-      id: currentUser.id,
-      email: currentUser.email,
-      data: state,
-      updated_at: new Date().toISOString()
+    await cloudFetch(restPath("/profiles"), {
+      method: "POST",
+      token: s.access_token,
+      prefer: "resolution=merge-duplicates",
+      body: { id: currentUser.id, email: currentUser.email, data: state, updated_at: new Date().toISOString() }
     });
   } catch (e) {}
 }
 
 async function loadFromCloud() {
-  const { data, error } = await supabase.from("profiles").select("data").eq("id", currentUser.id).maybeSingle();
-  if (error) throw error;
-  if (data && data.data && typeof data.data === "object") {
-    state = normalizeState(data.data);
+  const s = await ensureFreshSession();
+  if (!s) throw new Error("登录已过期，请重新登录");
+  const uid = encodeURIComponent(currentUser.id);
+  const rows = await cloudFetch(restPath("/profiles?id=eq." + uid + "&select=data"), { token: s.access_token });
+  if (Array.isArray(rows) && rows.length && rows[0].data && typeof rows[0].data === "object") {
+    state = normalizeState(rows[0].data);
   } else {
-    await supabase.from("profiles").insert({ id: currentUser.id, email: currentUser.email, data: structuredClone(DEFAULT_STATE) });
+    await cloudFetch(restPath("/profiles"), {
+      method: "POST",
+      token: s.access_token,
+      prefer: "resolution=merge-duplicates",
+      body: { id: currentUser.id, email: currentUser.email, data: structuredClone(DEFAULT_STATE) }
+    });
     state = normalizeState(null);
   }
   try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
@@ -826,6 +887,7 @@ function setAuthMode(mode) {
   $("tab-login").classList.toggle("active", mode === "login");
   $("tab-signup").classList.toggle("active", mode === "signup");
   $("auth-nickname").hidden = mode !== "signup";
+  $("btn-auth-submit").disabled = false;
   $("btn-auth-submit").textContent = mode === "login" ? "登录" : "注册";
   $("auth-hint").textContent = mode === "login" ? "还没有账号？点上面「注册」创建一个" : "已有账号？点上面「登录」";
 }
@@ -871,22 +933,33 @@ async function handleAuth() {
   btn.disabled = true;
   btn.textContent = "请稍候…";
   try {
-    let res;
+    let user = null;
     if (authMode === "signup") {
-      res = await supabase.auth.signUp({ email, password, options: { data: { nickname: nickname || email.split("@")[0] } } });
-      if (res.error) throw res.error;
-      if (res.data && res.data.user && !res.data.session) {
+      const r = await cloudFetch(authPath("/signup"), { method: "POST", body: { email, password, data: { nickname: nickname || email.split("@")[0] } } });
+      const sess = pickSession(r);
+      if (sess) {
+        saveCloudSession({ access_token: sess.access_token, refresh_token: sess.refresh_token, expires_at: Date.now() + (sess.expires_in || 3600) * 1000, user: sess.user });
+        user = sess.user;
+      } else if (r && r.user) {
         $("auth-error").textContent = "✅ 注册成功！请到邮箱点击确认链接，然后回来点「登录」。";
         btn.disabled = false;
         setAuthMode("login");
         return;
       }
     } else {
-      res = await supabase.auth.signInWithPassword({ email, password });
-      if (res.error) throw res.error;
+      const r = await cloudFetch(authPath("/token?grant_type=password"), { method: "POST", body: { email, password } });
+      const sess = pickSession(r);
+      if (sess) {
+        saveCloudSession({ access_token: sess.access_token, refresh_token: sess.refresh_token, expires_at: Date.now() + (sess.expires_in || 3600) * 1000, user: sess.user });
+        user = sess.user;
+      }
     }
-    if (res.data && res.data.user) {
-      await onAuthSuccess(res.data.user);
+    if (user) {
+      await onAuthSuccess(user);
+    } else {
+      $("auth-error").textContent = "登录失败，请重试";
+      btn.disabled = false;
+      btn.textContent = authMode === "login" ? "登录" : "注册";
     }
   } catch (err) {
     $("auth-error").textContent = friendlyAuthError(err);
@@ -908,7 +981,11 @@ async function onAuthSuccess(user) {
 }
 
 async function handleLogout() {
-  if (supabase) { try { await supabase.auth.signOut(); } catch (e) {} }
+  const s = cloudSession;
+  if (s && s.access_token) {
+    try { await cloudFetch(authPath("/logout"), { method: "POST", token: s.access_token }); } catch (e) {}
+  }
+  saveCloudSession(null);
   currentUser = null;
   state = normalizeState(null);
   try { localStorage.removeItem(STORE_KEY); } catch (e) {}
@@ -931,21 +1008,26 @@ $("btn-logout").addEventListener("click", handleLogout);
 $("auth-password").addEventListener("keydown", (e) => { if (e.key === "Enter") handleAuth(); });
 
 async function init() {
-  await initSupabase();
+  cloudConfigured = cloudInit();
+  loadCloudSession();
   buildSession();
 
   if (cloudConfigured) {
+    let user = null;
     try {
-      const { data } = await supabase.auth.getSession();
-      if (data && data.session) {
-        currentUser = data.session.user;
-        try { await loadFromCloud(); } catch (e) {}
-        hideAuthScreen();
-        updateUserBadge();
-      } else {
-        showAuthScreen();
+      const s = await ensureFreshSession();
+      if (s && s.access_token) {
+        user = await cloudFetch(authPath("/user"), { token: s.access_token });
       }
     } catch (e) {
+      user = null;
+    }
+    if (user) {
+      currentUser = user;
+      try { await loadFromCloud(); } catch (e) {}
+      hideAuthScreen();
+      updateUserBadge();
+    } else {
       showAuthScreen();
     }
   } else {
